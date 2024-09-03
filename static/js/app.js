@@ -90,7 +90,7 @@ function charts(sampleID) {
 
     // Set layout details for the bar chart
     let layoutBar = {
-        title: `<b>Top 10 Bacteria Cultures Found in Individual ${sampleID}</b>`,
+        title: `<b>Top 10 Bacteria Cultures Found in Sample # ${sampleID}</b>`,
     };
   
     // Render the plot to the div tag with id "bar"

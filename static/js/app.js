@@ -1,84 +1,160 @@
-// Build the metadata panel
-function buildMetadata(sample) {
-  d3.json("https://static.bc-edx.com/data/dl-1-2/m14/lms/starter/samples.json").then((data) => {
+// Define the url
+const url = "https://static.bc-edx.com/data/dl-1-2/m14/lms/starter/samples.json";
 
-    // get the metadata field
+// Fetch the JSON data and console log it
+d3.json(url).then(function(data) {
+  console.log(data);
+});
 
+// INITIALIZE THE DASHBOARD
 
-    // Filter the metadata for the object with the desired sample number
-
-
-    // Use d3 to select the panel with id of `#sample-metadata`
-
-
-    // Use `.html("") to clear any existing metadata
-
-
-    // Inside a loop, you will need to use d3 to append new
-    // tags for each key-value in the filtered metadata.
-
-  });
-}
-
-// function to build both charts
-function buildCharts(sample) {
-  d3.json("https://static.bc-edx.com/data/dl-1-2/m14/lms/starter/samples.json").then((data) => {
-
-    // Get the samples field
-
-
-    // Filter the samples for the object with the desired sample number
-
-
-    // Get the otu_ids, otu_labels, and sample_values
-
-
-    // Build a Bubble Chart
-
-
-    // Render the Bubble Chart
-
-
-    // For the Bar Chart, map the otu_ids to a list of strings for your yticks
-
-
-    // Build a Bar Chart
-    // Don't forget to slice and reverse the input data appropriately
-
-
-    // Render the Bar Chart
-
-  });
-}
-
-// Function to run on page load
+// Create a function to initialize the details
 function init() {
-  d3.json("https://static.bc-edx.com/data/dl-1-2/m14/lms/starter/samples.json").then((data) => {
 
-    // Get the names field
+    // Use D3 to select the dropdown menu
+    let dropdownMenu = d3.select("#selDataset");
+
+    // Get the sample names and populate the dropdown options
+    d3.json(url).then((data) => {
+        
+        // Set a variable for the sample names
+        let names = data.names;
+
+        // Add sample names to the dropdown menu
+        names.forEach((id) => {
+
+            console.log(id);
+
+            dropdownMenu.append("option").text(id).property("value", id);
+        });
+
+        // Get the first sample
+        let sampleFirst = names[0];
+
+        // Console log the first sample details
+        console.log(sampleFirst);
+
+        // Create the initial plots and demographic info
+        charts(sampleFirst);
+        demoInfo(sampleFirst);
+        gaugeChart(sampleFirst);
+    });
+    };
 
 
-    // Use d3 to select the dropdown with id of `#selDataset`
+// UPDATE THE CHARTS AND DEMOGRAPHIC INFO 
+
+// Change the charts and demographic info box based on dropdown selection
+function optionChanged(sampleNew) {
+    charts(sampleNew);
+    demoInfo(sampleNew);
+    gaugeChart(sampleNew);
+    };
 
 
-    // Use the list of sample names to populate the select options
-    // Hint: Inside a loop, you will need to use d3 to append a new
-    // option for each sample name.
+// BUILD THE BAR AND BUBBLE CHARTS  
+
+// Create a function to build the charts
+function charts(sampleID) {
+
+    // Use D3 to retrieve all data
+    d3.json(url).then((data) => {
+
+    // Retrieve all sample data
+    let sampleData = data.samples;
+
+    // Filter sample data by sample id
+    let filteredSample = sampleData.filter(sample => sample.id == sampleID);
+
+    // Get the first sample
+    let firstSample = filteredSample[0]
+
+    // Retrieve the data fields from sample
+    let otu_ids = firstSample.otu_ids;
+    let otu_labels = firstSample.otu_labels;
+    let sample_values = firstSample.sample_values;
+
+    // ********** HORIZONTAL BAR CHART ********** //
+
+    // Create the trace for top 10 items for the bar chart
+    let traceBar = {
+        x: sample_values.slice(0, 10).reverse(),
+        y: otu_ids.slice(0, 10).map(id => `OTU ${id}`).reverse(),
+        text: otu_labels.slice(0, 10).reverse(),
+        type: "bar",
+        orientation: "h"
+    };
+
+    // Create the data array for the bar chart
+    let dataBar = [traceBar];
+
+    // Set layout details for the bar chart
+    let layoutBar = {
+        title: `<b>Top 10 Bacteria Cultures Found in Individual ${sampleID}</b>`,
+    };
+  
+    // Render the plot to the div tag with id "bar"
+    Plotly.newPlot("bar", dataBar, layoutBar);
 
 
-    // Get the first sample from the list
+    // ********** BUBBLE CHART ********** //
 
+    // Create the trace for the bubble chart
+    let traceBubble = {
+        x: otu_ids,
+        y: sample_values,
+        text: otu_labels,
+        mode: "markers",
+        marker: {
+            size: sample_values,
+            color: otu_ids,
+            colorscale: "Picnic"
+        }
+    };
 
-    // Build charts and metadata panel with the first sample
+    // Create the data array for the bubble chart
+    let dataBubble = [traceBubble];
 
+    // Set layout details for the bubble chart
+    let layoutBubble = {
+        title: "<b>Bacteria Cultures per Sample</b>",
+        hovermode: "closest",
+        xaxis: {title: "OTU ID"}
+    };
+
+    // Render the plot to the div tag with id "bubble"
+    Plotly.newPlot("bubble", dataBubble, layoutBubble);
   });
-}
+};
+  
 
-// Function for event listener
-function optionChanged(newSample) {
-  // Build charts and metadata panel each time a new sample is selected
+// SAMPLE METADATA
 
-}
+// Create a function to get an individual's Demographic Information
+function demoInfo(sampleID) {
 
-// Initialize the dashboard
+    // Use D3 to retrieve all data
+    d3.json(url).then((data) => {
+
+    // Retrieve all metadata
+    let metadata = data.metadata;
+
+    // Filter sample data by id
+    let filteredSample = metadata.filter(sample => sample.id == sampleID);
+
+    // Get the first sample
+    let firstSample = filteredSample[0]
+
+    // Use D3 to select the Demographic Info box and clear any existing data
+    let demoInfoBox = d3.select("#sample-metadata").html("");
+
+    // Add key/value details from the filtered sample data to the demographic info box
+    Object.entries(firstSample).forEach(([key, value]) => {
+
+        demoInfoBox.append("h5").text(`${key.toUpperCase()}: ${value}`);
+        });
+  });
+};
+
+// Call the initialization function
 init();

@@ -37,7 +37,6 @@ function init() {
         // Create the initial plots and demographic info
         charts(sampleFirst);
         demoInfo(sampleFirst);
-        gaugeChart(sampleFirst);
     });
     };
 
@@ -48,7 +47,6 @@ function init() {
 function optionChanged(sampleNew) {
     charts(sampleNew);
     demoInfo(sampleNew);
-    gaugeChart(sampleNew);
     };
 
 
